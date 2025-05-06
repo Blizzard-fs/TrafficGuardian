@@ -1,10 +1,23 @@
 <?php
 namespace BotDetection;
 
+/**
+ * Class BotDetector
+ * 
+ * Detects bots based on user agent strings and manages rate limiting.
+ * 
+ * @package BotDetection
+ */
 class BotDetector
 {
+    /**
+     * @var ThrottleGuard $throttleGuard The throttle guard instance for rate limiting.
+     */
     protected ThrottleGuard $throttleGuard;
 
+    /**
+     * @var array $botBlacklist List of bot user agents to detect.
+     */
     protected array $botBlacklist = [
         'bot',
         'crawl',
@@ -81,6 +94,9 @@ class BotDetector
         'PowerShell'
     ];
 
+    /**
+     * @var array $botWhitelist List of allowed bot user agents (e.g., search engine bots).
+     */
     protected array $botWhitelist = [
         'Googlebot',
         'Googlebot-Image',
@@ -112,16 +128,30 @@ class BotDetector
         'MojeekBot'
     ];
 
+    /**
+     * BotDetector constructor.
+     * Initializes the throttle guard.
+     */
     public function __construct() 
     {
         $this->setThrottleGuard(new ThrottleGuard()); 
     }
 
+    /**
+     * Checks if the current request is suspicious based on user agent or rate limit.
+     * 
+     * @return bool True if the request is suspicious, false otherwise.
+     */
 	public function isSuspicious(): bool
 	{
 		return $this->isBotUserAgent() || $this->getThrottleGuard()->isRateLimitExceeded();
 	}
 
+    /**
+     * Checks if the user agent belongs to a bot (either blacklisted or not whitelisted).
+     * 
+     * @return bool True if the user agent is a bot, false otherwise.
+     */
     protected function isBotUserAgent(): bool
     {
         $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
@@ -133,22 +163,41 @@ class BotDetector
         return preg_match('/' . implode('|', $this->getBotBlacklist()) . '/i', $userAgent);
     }
 
-    //TODO: If timeout exceeds set timeout header and see if the user continues unwanted behaviour. > then block the user;
+    /**
+     * Returns the list of bot user agents that are whitelisted.
+     * 
+     * @return array The whitelist of bot user agents.
+     */
     public function getBotWhitelist(): array
     {
         return $this->botWhitelist;
     }
 
+    /**
+     * Returns the list of bot user agents that are blacklisted.
+     * 
+     * @return array The blacklist of bot user agents.
+     */
     public function getBotBlacklist(): array
     {
         return $this->botBlacklist; 
     }
-    
+
+    /**
+     * Sets the throttle guard instance for rate limiting.
+     * 
+     * @param ThrottleGuard|null $throttleGuard The throttle guard instance.
+     */
     public function setThrottleGuard(?ThrottleGuard $throttleGuard): void 
     {
         $this->throttleGuard = $throttleGuard;
     }
 
+    /**
+     * Gets the throttle guard instance.
+     * 
+     * @return ThrottleGuard|null The throttle guard instance.
+     */
     public function getThrottleGuard(): ?ThrottleGuard
     {
         return $this->throttleGuard; 
