@@ -1,4 +1,5 @@
 <?php
+
 namespace BotDetection;
 
 /**
@@ -132,9 +133,9 @@ class BotDetector
      * BotDetector constructor.
      * Initializes the throttle guard.
      */
-    public function __construct() 
+    public function __construct(ThrottleGuard $throttleGuard) 
     {
-        $this->setThrottleGuard(new ThrottleGuard()); 
+        $this->setThrottleGuard($throttleGuard); 
     }
 
     /**
@@ -144,23 +145,35 @@ class BotDetector
      */
 	public function isSuspicious(): bool
 	{
-		return $this->isBotUserAgent() || $this->getThrottleGuard()->isRateLimitExceeded();
+		return $this->isEvilUserAgent() || $this->getThrottleGuard()->isRateLimitExceeded();
 	}
 
     /**
      * Checks if the user agent belongs to a bot (either blacklisted or not whitelisted).
-     * 
-     * @return bool True if the user agent is a bot, false otherwise.
+     * * @return bool True if the user agent is a bot, false otherwise.
      */
-    protected function isBotUserAgent(): bool
+    protected function isEvilUserAgent(): bool
     {
-        $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $userAgent = $this->getUserAgent();
 
-        if (preg_match('/' . implode('|', $this->getBotWhitelist()) . '/i', $userAgent)) {
+        $escapedWhitelistItems = array_map(function ($item) {
+            return preg_quote($item, '/');
+        }, $this->getBotWhitelist());
+
+        $whitelistPattern = implode('|', $escapedWhitelistItems);
+        
+        if (!empty($whitelistPattern) && preg_match('/(' . $whitelistPattern . ')/i', $userAgent)) 
+        {
             return false;
         }
 
-        return preg_match('/' . implode('|', $this->getBotBlacklist()) . '/i', $userAgent);
+        $escapedBlacklistItems = array_map(function($item) {
+            return preg_quote($item, '/');
+        }, $this->getBotBlacklist());
+
+        $blacklistPattern = implode('|', $escapedBlacklistItems);
+
+        return (bool) preg_match('/(' . $blacklistPattern . ')/i', $userAgent);
     }
 
     /**
@@ -201,5 +214,15 @@ class BotDetector
     public function getThrottleGuard(): ?ThrottleGuard
     {
         return $this->throttleGuard; 
+    }
+
+    /**
+     * Gets the user agent from the server global variable
+     *
+     * @return string user agent
+     */
+    public function getUserAgent(): string
+    {
+        return $_SERVER['HTTP_USER_AGENT'] ?? '';
     }
 }
