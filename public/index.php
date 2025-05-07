@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/../autoloader.php';
 
 use BotDetection\BotDetector;
@@ -6,7 +7,6 @@ use BotDetection\ZipBomber;
 use BotDetection\ThrottleGuard;
 use BotDetection\Storage\RedisStorage;
 use BotDetection\Storage\JsonStorage;
-use BotDetection\Storage\StorageInterface;
 
 $storageStrategy = null;
 $redisHost = 'trafficguardian-redis';
@@ -19,7 +19,7 @@ if (class_exists('Redis'))
     try 
     {
         if ($redis->connect($redisHost, $redisPort, $redisConnectionTimeout)) 
-        { // 0.5 second timeout
+        {
             $storageStrategy = new RedisStorage($redis);
             error_log("TrafficGuardian: Using Redis for rate limiting.");
         } 
@@ -40,18 +40,18 @@ else
 
 if ($storageStrategy === null) 
 {
-    $storageStrategy = new jsonStorage(); // Uses default log path root/Logs/
-    error_log("TrafficGuardian: Using FileStorage for rate limiting.");
+    $storageStrategy = new JsonStorage();
+    error_log("TrafficGuardian: Using JsonStorage for rate limiting.");
 }
 
-
-$throttler = new ThrottleGuard($storageStrategy); 
+$throttler = new ThrottleGuard($storageStrategy);
 $detector = new BotDetector($throttler);
 
-if ($detector->isSuspicious()) {
-    error_log("Suspicious request detected and blocked for IP: " . $throttler->getClientIP());
+if ($detector->isSuspicious()) 
+{
+    error_log("TrafficGuardian: Suspicious request detected and blocked for IP: " . $throttler->getClientIP());
     $bomber = new ZipBomber();
-    $bomber->deliver(); // This will exit
+    $bomber->deliver();
 }
 
 exit('Welcome!');

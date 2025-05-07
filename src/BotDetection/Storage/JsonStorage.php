@@ -2,12 +2,14 @@
 
 namespace BotDetection\Storage;
 
-class JsonStorage implements StorageInterface 
+use BotDetection\Models\ClientRequestData;
+
+class JsonStorage implements StorageInterface
 {
     private string $logPath;
 
     /**
-     * FileStorageStrategy constructor.
+     * JsonStorage constructor.
      *
      * @param string|null $logPath The path to the log directory. Defaults to project_root/Logs/.
      */
@@ -16,7 +18,7 @@ class JsonStorage implements StorageInterface
         if ($logPath === null) 
         {
             $this->logPath = __DIR__ . '/../../../Logs/';
-        }
+        } 
         else 
         {
             $this->logPath = $logPath;
@@ -26,49 +28,69 @@ class JsonStorage implements StorageInterface
         {
             if (!mkdir($this->logPath, 0755, true) && !is_dir($this->logPath)) 
             {
-                error_log("Warning: Could not create log directory: " . $this->logPath);
+                error_log("JsonStorage Warning: Could not create log directory: " . $this->logPath);
             }
         }
     }
 
+    /**
+     * Generates the full file path for a given identifier.
+     *
+     * @param string $identifier The identifier (e.g., IP address).
+     * @return string The full file path.
+     */
     private function getFilePath(string $identifier): string
     {
-        // we use . and : to sanitize both IPv4 and IPv6;
         $filename = str_replace(['.', ':'], '-', $identifier) . '.json';
         return rtrim($this->logPath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $filename;
     }
 
-    public function load(string $identifier): array
+    /**
+     * {@inheritdoc}
+     */
+    public function load(string $identifier): ?ClientRequestData
     {
         $filePath = $this->getFilePath($identifier);
 
-        if (!file_exists($filePath)) {
-            return [];
+        if (!file_exists($filePath)) 
+        {
+            return null; 
         }
 
         $jsonData = file_get_contents($filePath);
-        if ($jsonData === false) {
-            return []; // TODO: Add logging
+        if ($jsonData === false) 
+        {
+            error_log("JsonStorage Error: Failed to read file for identifier: " . $identifier . " at path: " . $filePath);
+            return null;
         }
 
-        $data = json_decode($jsonData, true);
-        return is_array($data) ? $data : [];
+        $dataArray = json_decode($jsonData, true);
+        if (!is_array($dataArray)) 
+        {
+            error_log("JsonStorage Error: Failed to decode JSON or JSON is not an array for identifier: " . $identifier . " at path: " . $filePath);
+            return null;
+        }
+
+        return ClientRequestData::fromArray($dataArray);
     }
 
-    public function save(string $identifier, array $data): void
+    /**
+     * {@inheritdoc}
+     */
+    public function save(string $identifier, ClientRequestData $data): void
     {
         $filePath = $this->getFilePath($identifier);
-        $jsonData = json_encode($data, JSON_PRETTY_PRINT);
+        $jsonData = json_encode($data->toArray(), JSON_PRETTY_PRINT);
 
         if ($jsonData === false) 
         {
-            error_log("Error: json_encode failed for IP: " . $identifier);
+            error_log("JsonStorage Error: json_encode failed for identifier: " . $identifier . ". Error: " . json_last_error_msg());
             return;
         }
 
         if (file_put_contents($filePath, $jsonData) === false) 
         {
-            error_log("Error: file_put_contents failed for path: " . $filePath);
+            error_log("JsonStorage Error: file_put_contents failed for identifier: " . $identifier . " at path: " . $filePath);
         }
     }
 }
