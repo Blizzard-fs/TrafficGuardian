@@ -1,130 +1,24 @@
 # TrafficGuardian
 
-TrafficGuardian is a powerful tool for detecting and preventing unwanted bot traffic and excessive requests to your website. It combines bot detection and rate limiting to provide a robust security solution for your web application.
+🚨 **IMPORTANT WARNING & DISCLAIMER** 🚨
 
-## Features:
-- Detects malicious bots and allows/blocks them based on user-agent strings.
-- Rate-limits requests to your server to prevent abuse (throttling based on IP address).
-- Uses a whitelist/blacklist system for known good and bad bots.
-- Stores throttle data in a log for persistent tracking.
-- Implements timeouts for users who exceed the request limits.
+This project, TrafficGuardian, was created partly "for the memes," especially concerning its capability to crash bots using a zip bomb. The use of this software, particularly the zip bomb functionality, is **entirely at your own risk** and is **strongly discouraged for any serious or production applications.**
 
-## Installation
+**Specific Warning Regarding the Zip Bomb Feature:**
+The zip bomb functionality within this project is designed to potentially crash systems (such as those operated by bots) by delivering an extremely compressed file. Activating this feature can lead to:
+* Crashing the system that attempts to process the zip bomb.
+* Unintentional damage to third-party systems, for example, if a bot operates from a compromised system (a "slave computer"), thereby crashing that unsuspecting party's computer.
+* Potentially other unforeseen negative consequences.
 
-Clone the repository:
+**Disclaimer of Liability:**
+* The author(s) and contributors to TrafficGuardian are **in no way responsible or liable** for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, data loss, system crashes, damage to hardware or software, business interruption, or other financial or personal losses) arising from the use, misuse, installation, operation, or inability to use this software, even if the author(s) have been advised of the possibility of such damages.
+* This software is provided "AS IS", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and noninfringement.
+* By downloading, cloning, compiling, installing, using, modifying, or distributing this software, you explicitly agree that you, as the user, bear **full and sole responsibility** for all actions taken with this software and for any and all consequences thereof.
+* It is strongly advised not to deploy the high-risk components of this software (such as the zip bomb) in a production environment, against systems you do not explicitly own or have permission to test, or in any manner that could cause harm to others or violate legal frameworks.
 
-```bash
-git clone https://github.com/Blizzard-fs/TrafficGuardian.git
-```
-
-Install the dependencies (none required, pure PHP):
-
-```bash
-# No dependencies currently
-```
-
-## Usage
-
-### 1. Integrating `BotDetector` in Your Application
-
-To integrate the bot detection and throttling mechanism in your PHP application, you need to create an instance of `BotDetector` and check if the request is suspicious.
-
-```php
-// Assuming BotDetector and ThrottleGuard are autoloaded or included properly
-require 'path/to/BotDetector.php';
-
-$botDetector = new BotDetector();
-
-if ($botDetector->isSuspicious()) {
-    // Action: Block the request, send an HTTP response, or log the incident
-    header("HTTP/1.1 403 Forbidden");
-    echo "Request is suspicious and has been blocked.";
-    exit;
-}
-
-// Continue processing legitimate requests
-echo "Request is legitimate.";
-```
-
-### 2. Rate Limiting and Bot Detection
-
-The `BotDetector` class performs two key checks:
-
-* **Bot Detection**: It checks the `User-Agent` of the incoming request against a predefined blacklist and whitelist of bots.
-* **Rate Limiting**: It tracks the request rate for each IP address and throttles requests that exceed the allowed rate.
-
-### 3. Customizing the Bot Lists
-
-You can update the bot lists by modifying the `$botWhitelist` and `$botBlacklist` arrays within the `BotDetector` class. Add or remove bot user-agent strings to suit your needs.
-
-```php
-$botDetector = new BotDetector();
-
-// Customize bot lists:
-$botDetector->setBotBlacklist([
-    'malicious-bot',
-    'bad-bot',
-    // Add more bots here
-]);
-
-$botDetector->setBotWhitelist([
-    'Googlebot',
-    'Bingbot',
-    // Add more SEO bots here
-]);
-```
-
-### 4. Modifying Rate Limits
-
-To adjust the rate limits for throttling requests, modify the `ThrottleGuard` class, specifically the `getLimitPerSecond()` and `getTimeoutSeconds()` methods. You can set your desired rate limits as follows:
-
-```php
-// ThrottleGuard example:
-$throttleGuard = new ThrottleGuard();
-$throttleGuard->setLimitPerSecond(10); // Allow 10 requests per second
-$throttleGuard->setTimeoutSeconds(60); // Timeout for 60 seconds after exceeding the limit
-```
-
-### 5. Log Storage
-
-Throttle data (timestamps, user-agent counts, violations) are stored in JSON files, ensuring persistent tracking across requests. You can configure the log file storage location and format by modifying the `ThrottleGuard` class.
-
-The logs will be stored in a directory called `Logs/`, with each IP having its own file named according to the IP address (with dots replaced by hyphens). This makes it easy to track request activity per user.
-
-```bash
-Logs/
-  192-168-1-1.json
-  10-0-0-1.json
-```
-
-### 6. Viewing and Purging Logs
-
-To view or purge the logs, you can either write a custom script that reads and deletes logs based on your preferences, or manually check the logs stored in the `Logs/` folder.
-
-```php
-// Example to view logs for a specific IP
-$ip = '192.168.1.1';
-$logFile = 'Logs/' . str_replace('.', '-', $ip) . '.json';
-
-if (file_exists($logFile)) {
-    $logData = json_decode(file_get_contents($logFile), true);
-    print_r($logData);
-}
-
-// Example to purge logs for a specific IP
-if (file_exists($logFile)) {
-    unlink($logFile); // Deletes the log for that IP
-}
-```
-
-## Contributions
-
-If you have ideas for improvements or bug fixes, feel free to fork the repository and create a pull request. All contributions are welcome!
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+**Think carefully and act responsibly.** This project is primarily intended for educational, experimental, or satirical ("meme") purposes. Be aware of the potential impact of your actions.
 
 ---
 
-Enjoy a more secure, bot-resistant, and well-throttled web application with TrafficGuardian!
+**License:**
+This project is intended to be licensed under the MIT License. Please ensure you have a `LICENSE` file in the root of the project containing the full text of the MIT License. By using this software, you agree to the terms of that license.
